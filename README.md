@@ -1,73 +1,115 @@
-# React + TypeScript + Vite
+# Secure Dashboard – React + TypeScript + Vite with Azure AD (Entra ID) Auth
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a secure dashboard application built with React, TypeScript, and Vite. It integrates Microsoft Entra ID (Azure AD) using MSAL for authentication, protected routing, and basic role-based access control.
 
-Currently, two official plugins are available:
+The app is structured around an authentication provider, protected routes, and a small set of example pages (Dashboard, Profile, Settings) to demonstrate how to secure a SPA with Azure AD.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 18 + TypeScript
+- Vite
+- MSAL.js (Microsoft Authentication Library) for Azure AD / Entra ID
+- React Router (protected routes, role guards)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Features
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- Azure AD / Entra ID sign-in via MSAL
+- Global auth context via [`AuthProvider`](src/auth/authProvider.tsx:1)
+- Central MSAL configuration in [`msalConfig`](src/auth/msalConfig.ts:1)
+- Route protection using [`ProtectedRoute`](src/components/ProtectedRoute.tsx:1)
+- Role-based access control using [`RoleGuard`](src/components/RoleGuard.tsx:1)
+- Example pages:
+  - Dashboard – [`Dashboard`](src/pages/Dashboard.tsx:1)
+  - Login – [`Login`](src/pages/Login.tsx:1)
+  - Profile – [`Profile`](src/pages/Profile.tsx:1)
+  - Settings – [`Settings`](src/pages/Settings.tsx:1)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Project Structure (high level)
+
+- [`src/main.tsx`](src/main.tsx:1) – React entry point; wires up routing and the auth provider.
+- [`src/App.tsx`](src/App.tsx:1) – Top-level app shell and route definitions.
+- [`src/auth/authProvider.tsx`](src/auth/authProvider.tsx:1) – Wraps the app with MSAL and exposes auth context/hooks.
+- [`src/auth/msalConfig.ts`](src/auth/msalConfig.ts:1) – MSAL configuration (client ID, authority, redirect URIs, scopes).
+- [`src/components/ProtectedRoute.tsx`](src/components/ProtectedRoute.tsx:1) – Protects routes and redirects unauthenticated users.
+- [`src/components/RoleGuard.tsx`](src/components/RoleGuard.tsx:1) – Conditionally renders content based on user roles/claims.
+- [`src/pages/`](src/pages/Dashboard.tsx:1) – Example feature pages (Dashboard, Login, Profile, Settings).
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (LTS recommended)
+- An Azure AD / Microsoft Entra ID app registration with SPA redirect URLs configured.
+
+### 1. Install dependencies
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Configure environment variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` file in the project root (if not already present) and configure your Azure AD / Entra ID application values, for example:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_AZURE_AD_CLIENT_ID=<your_client_id>
+VITE_AZURE_AD_TENANT_ID=<your_tenant_id_or_common>
+VITE_AZURE_AD_REDIRECT_URI=http://localhost:5173
 ```
+
+These variables are typically consumed inside [`msalConfig`](src/auth/msalConfig.ts:1) to construct the MSAL configuration.
+
+> Do not commit secrets to source control. Use `.env` locally and appropriate secret stores in higher environments.
+
+### 3. Run the app in development mode
+
+```bash
+npm run dev
+```
+
+Vite will print a local URL (by default `http://localhost:5173`). Open it in your browser and sign in with an account from your Azure AD / Entra tenant.
+
+### 4. Build for production
+
+```bash
+npm run build
+```
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+---
+
+## Authentication Flow (Overview)
+
+1. The app boots in [`src/main.tsx`](src/main.tsx:1), which wraps the router with [`AuthProvider`](src/auth/authProvider.tsx:1).
+2. [`AuthProvider`](src/auth/authProvider.tsx:1) initializes MSAL using [`msalConfig`](src/auth/msalConfig.ts:1) and exposes authentication state and actions (login, logout, account info).
+3. Routes that require authentication are wrapped with [`ProtectedRoute`](src/components/ProtectedRoute.tsx:1), which either renders the requested page or redirects to the login page.
+4. For routes or components that require specific roles/permissions, [`RoleGuard`](src/components/RoleGuard.tsx:1) checks the user's claims (e.g., roles) before rendering.
+
+---
+
+## Scripts
+
+- `npm run dev` – Start Vite dev server.
+- `npm run build` – Build for production.
+- `npm run preview` – Preview the production build locally.
+- `npm run lint` – Run lint checks (if configured in [`eslint.config.js`](eslint.config.js:1)).
+
+---
+
+## Notes
+
+- This project was bootstrapped with Vite's React + TypeScript template and then extended with an MSAL-based authentication layer.
+- You can customize routes and pages under [`src/pages`](src/pages/Dashboard.tsx:1) and extend role-based access logic inside [`RoleGuard`](src/components/RoleGuard.tsx:1).

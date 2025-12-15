@@ -23,10 +23,7 @@ The app is structured around an authentication provider, protected routes, and a
 - Route protection using [`ProtectedRoute`](src/components/ProtectedRoute.tsx:1)
 - Role-based access control using [`RoleGuard`](src/components/RoleGuard.tsx:1)
 - Example pages:
-  - Dashboard – [`Dashboard`](src/pages/Dashboard.tsx:1)
   - Login – [`Login`](src/pages/Login.tsx:1)
-  - Profile – [`Profile`](src/pages/Profile.tsx:1)
-  - Settings – [`Settings`](src/pages/Settings.tsx:1)
 
 ---
 
